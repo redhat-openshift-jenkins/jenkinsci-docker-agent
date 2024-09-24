@@ -36,10 +36,15 @@ RUN chmod +x /usr/local/bin/jenkins-agent && \
 
 ENV LANG C.UTF-8
 
-USER "${user}"
+# KFLUXBUGS-1657: mkdir -p fails if run as nonroot
+# Adding `chown` commands to ensure proper file ownership after running as root
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
-RUN mkdir -p /home/"${user}"/.jenkins && mkdir -p "${AGENT_WORKDIR}"
+RUN mkdir -p /home/"${user}"/.jenkins && \
+    chown "${user}":"${group}" /home/"${user}"/.jenkins && \
+    mkdir -p "${AGENT_WORKDIR}" && \
+    chown "${user}":"${group}" "${AGENT_WORKDIR}"
 
+USER ${user}
 VOLUME /home/"${user}"/.jenkins
 VOLUME "${AGENT_WORKDIR}"
 WORKDIR /home/"${user}"
